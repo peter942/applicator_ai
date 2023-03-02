@@ -1,6 +1,0 @@
-name: streamlit-webbrowser
-dependencies:
-  - python=3.7
-  - pip
-  - pip:
-    - webbrowser
