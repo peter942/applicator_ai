@@ -2,6 +2,9 @@ import openai
 import streamlit as st
 import time
 
+
+st.set_page_config(page_title="ChatGPT Prompt Creator")
+                   
 def chatgpt_prompt(prompt, model):
     completion = openai.ChatCompletion.create(
     model=model, 
@@ -24,10 +27,13 @@ if 'responses' not in st.session_state:
 column = 1
 
 st.sidebar.title("ChatGPT Helper")
+if st.session_state['open_ai_api_key'] == "":
+    st.sidebar.warning("You need to enter your OpenAI API key to test queries")
 with st.sidebar.expander("OpenAI API Key"):
     st.session_state['open_ai_api_key'] = st.text_input("Enter your key here:", "")
-    st.write("No data is saved. This is hosted on Streamlit's Community Cloud: https://streamlit.io/cloud")
-    st.write("This is You can get your API key from here: https://platform.openai.com/account/api-keys")
+    st.markdown("You can get your API key from [here](https://platform.openai.com/account/api-keys)")
+    st.markdown("No data is saved. This is hosted on [Streamlit's Community Cloud](https://streamlit.io/cloud).")
+    
     
     if st.button("Save"):
         openai.api_key = st.session_state['open_ai_api_key']
@@ -44,7 +50,8 @@ else:
     if st.sidebar.button("Ask ChatGPT"):
         st.session_state['help'] = chatgpt_prompt([{'role': 'system', 'content': 'You are a prompt-writing assistant, you help write prompts optimised for ChatGPT in order to help users customise it to perfection. You give them detailed prompts based on the instructions they provide.'}, {'role': 'assistant', 'content': 'Write a prompt for chatGPT to act as a javascript assistant'}, {'role': 'assistant', 'content': 'write a prompt to act as a motivational coach\n'}, {'role': 'assistant', 'content': 'I want you to act as a motivational coach. I will provide you with some information about someone\'s goals and challenges, and it will be your job to come up with strategies that can help this person achieve their goals. This could involve providing positive affirmations, giving helpful advice or suggesting activities they can do to reach their end goal. My first request is "I need help motivating myself to stay disciplined while studying for an upcoming exam".'}, {'role': 'user', 'content': 'write a prompt to act as a life coach'}, {'role': 'assistant', 'content': 'I want you to act as a life coach. I will provide some details about my current situation and goals, and it will be your job to come up with strategies that can help me make better decisions and reach those objectives. This could involve offering advice on various topics, such as creating plans for achieving success or dealing with difficult emotions. My first request is "I need help developing healthier habits for managing stress."'}, {'role': 'user', 'content': '{}'.format(prompt)}], model="gpt-3.5-turbo")
         st.experimental_rerun()
-st.sidebar.info(st.session_state['help'])
+if st.session_state['help'] != "":
+    st.sidebar.info(st.session_state['help'])
 
 header1, header2 = st.columns([3, 2])
 
@@ -79,7 +86,7 @@ for i in st.session_state['messages']:
     with row3:
         st.write(" ")
         st.write(" ")
-        if st.button("Delete", key=f"{column}_c", disabled=disabled):
+        if st.button("Delete", key=f"{column}_c", disabled=disabled, help="You can delete all the messages at the top if you'd like to start fresh"):
             st.session_state['messages'].remove(i)
             st.experimental_rerun()
 
@@ -97,11 +104,16 @@ with st.expander("Get prompt as JSON"):
     
 st.subheader("Preview Responses")
 
-number_of_responses = st.number_input("Number of responses", 1, 10, 3, 1)
+example1, example2 = st.columns([1, 2])
+with example1:
+    number_of_responses = st.number_input("Number of example responses to preview:", 1, 10, 3, 1)
+with example2:
+    st.write(" ")
+    st.write(" ")
 if st.session_state['open_ai_api_key'] == "":
-    st.button("Preview", key="preview", disabled=True, help="You need to enter your OpenAI API key in the top left corner first!")
+    st.button("Preview next message", key="preview", disabled=True, help="You need to enter your OpenAI API key in the top left corner first!")
 else:
-    if st.button("Preview"):
+    if st.button("Preview next message"):
         st.session_state['responses'] = []        
         for i in range(0, number_of_responses):
             response = chatgpt_prompt(st.session_state['messages'], "gpt-3.5-turbo")
