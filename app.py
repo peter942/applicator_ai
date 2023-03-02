@@ -52,6 +52,9 @@ else:
         st.experimental_rerun()
 if st.session_state['help'] != "":
     st.sidebar.info(st.session_state['help'])
+    if st.sidebar.button("Make this system message #1"):
+        st.session_state['messages'][0]["content"] = st.session_state['help']
+        st.experimental_rerun()
 
 header1, header2 = st.columns([3, 2])
 
