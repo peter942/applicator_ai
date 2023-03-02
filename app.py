@@ -32,7 +32,7 @@ if st.session_state['open_ai_api_key'] == "":
 with st.sidebar.expander("OpenAI API Key"):
     st.session_state['open_ai_api_key'] = st.text_input("Enter your key here:", "")
     st.markdown("You can get your API key from [here](https://platform.openai.com/account/api-keys)")
-    st.markdown("No data is saved. This is hosted on [Streamlit's Community Cloud](https://streamlit.io/cloud).")
+    st.markdown("No data is saved - you can see the code [here](https://github.com/peter942/chatgpt-prompt_builder). This is hosted on [Streamlit's Community Cloud](https://streamlit.io/cloud).")
     
     
     if st.button("Save"):
