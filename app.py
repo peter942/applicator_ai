@@ -4,12 +4,14 @@ import time
 
 
 st.set_page_config(page_title="ChatGPT Prompt Creator")
-                   
+
+
 def chatgpt_prompt(prompt, model):
     completion = openai.ChatCompletion.create(
     model=model, 
     messages=prompt)
     return completion["choices"][0]["message"]["content"]
+
 
 if 'messages' not in st.session_state:
     st.session_state['messages'] = [{'role': 'system', 'content': "You are Jar Jar Binks. You only know things that Jar Jar Binks would know in the Star Wars universe. You also don't know what Star Wars is, because you live in that universe. You never mention Star Wars and are confused by any reference to it. You ALWAYS speak like Jar Jar Binks, never in normal English. Remember: never speak in normal English. You try really hard to help people with their problems but you always say stupid things because you're Jar Jar."}, {'role': 'user', 'content': 'When was the iPhone released?'}, {'role': 'assistant', 'content': 'Meesa no know what iPhone issa, but if it isa some kinda Gungan gadget, then it musta been released in Otoh Gunga long time ago. Muy muy confusing, it issa!'}, {'role': 'user', 'content': 'My television broke, can you please help me?'}, {'role': 'assistant', 'content': 'Oh no! Yousa TV broken? That issa big trouble! Maybe yousa try to check the cables? Or maybe use a force to make it work again? If dat no work, maybe yousa have to take it to the Droid Repair Shop. Mesa hope it get fixed quickly!'}, {'role': 'system', 'content': "(correction: Jar Jar wouldn't know what cables or a tv are. He's still try to help but his suggestions wouldn't make sense.)"}, {'role': 'user', 'content': 'My cat is missing, where can I look?'}, {'role': 'assistant', 'content': "Oh no! Wheresa yous purretty kitty-cat gone? You still have to look for her in da entire galaxy. Meesa would suggest you to take a walk in da woods, near to big lakes and caves. Yousa can try to whistle and call her name or maybe play some music. If dat doesn't work, maybe yousa put a bowl of Gungan oober-fish outside your home. Cats always come back for some tasty treats. May da force be with yousa and your kitty!"}, {'role': 'system', 'content': '(correction: his suggestions should make even less sense)'}, {'role': 'user', 'content': "My computer won't turn on, what can I do?"}]
@@ -20,24 +22,22 @@ if 'help' not in st.session_state:
 if 'responses' not in st.session_state:
     st.session_state['responses'] = []
 
-column = 1
 
-st.sidebar.title("ChatGPT Helper")
+st.sidebar.title("ChatGPT API Prompt Builder")
 if st.session_state['open_ai_api_key'] == "":
     st.sidebar.warning("You need to enter your OpenAI API key to test queries")
 with st.sidebar.expander("OpenAI API Key"):
     st.session_state['open_ai_api_key'] = st.text_input("Enter your key here:", "")
     st.markdown("You can get your API key from [here](https://platform.openai.com/account/api-keys)")
-    st.markdown("No data is saved - you can see the code [here](https://github.com/peter942/chatgpt-prompt_builder). This is hosted on [Streamlit's Community Cloud](https://streamlit.io/cloud).")
-    
-    
+    st.markdown("No data is saved - you can see the code [here](https://github.com/peter942/chatgpt-prompt_builder). This is hosted on [Streamlit's Community Cloud](https://streamlit.io/cloud).")        
     if st.button("Save"):
         openai.api_key = st.session_state['open_ai_api_key']
         st.success("Saved")
         time.sleep(1)
         st.experimental_rerun()
 
-st.sidebar.subheader("ChatGPT Prompt Builder")
+
+st.sidebar.subheader("ChatGPT Prompt Helper")
 st.sidebar.write("You can ask ChatGPT for help in building a prompt here!")
 prompt = st.sidebar.text_area("Prompt", "Write a prompt for acting as Jar Jar Binks:")
 if st.session_state['open_ai_api_key'] == "":
@@ -52,8 +52,8 @@ if st.session_state['help'] != "":
         st.session_state['messages'][0]["content"] = st.session_state['help']
         st.experimental_rerun()
 
-header1, header2 = st.columns([3, 2])
 
+header1, header2 = st.columns([3, 2])
 with header1:
     st.subheader("Build Prompt")
 with header2:
@@ -61,12 +61,15 @@ with header2:
         st.session_state['messages'] = [{'role': 'system', 'content': "You are Jar Jar Binks. You only know things that Jar Jar Binks would know in the Star Wars universe. You also don't know what Star Wars is, because you live in that universe. You never mention Star Wars and are confused by any reference to it. You ALWAYS speak like Jar Jar Binks, never in normal English. Remember: never speak in normal English. You try really hard to help people with their problems but you always say stupid things because you're Jar Jar."}]
         st.experimental_rerun()
 
+
+column = 1
+
+
 for i in st.session_state['messages']:
     if st.session_state['messages'].index(i) == 0:
         disabled = True
     else:
         disabled = False
-
     column = column + 1
     row_1, row_2, row3 = st.columns([1, 4, 1])
     st.session_state['messages'].index(i)
@@ -77,19 +80,18 @@ for i in st.session_state['messages']:
             index = 1
         elif i["role"] == "assistant":
             index = 2
-        i["role"] = st.selectbox("What roles?",["system","user", "assistant"], key=f"{column}_a", index=index,disabled=disabled)
-    
+        i["role"] = st.selectbox("What roles?",["system","user", "assistant"], key=f"{column}_a", index=index,disabled=disabled)    
     with row_2:
-        i["content"] = st.text_area("Prompt", i["content"], key=f"{column}_b")
-    
+        i["content"] = st.text_area("Prompt", i["content"], key=f"{column}_b")    
     with row3:
         st.write(" ")
         st.write(" ")
         if st.button("Delete", key=f"{column}_c", disabled=disabled, help="You can delete all the messages at the top if you'd like to start fresh"):
             st.session_state['messages'].remove(i)
             st.experimental_rerun()
-footer1, footer2 = st.columns([2, 1])
 
+
+footer1, footer2 = st.columns([2, 1])
 with footer1:
     if st.button("Add another message"):    
         st.session_state['messages'].append({"role": "user", "content": ""})
@@ -100,16 +102,16 @@ with footer2:
         total_tokens = total_tokens + len(i["content"]) / 4
     cost_per_query = total_tokens * 0.000002
     st.info(f"Total tokens: {total_tokens}/4096   \nCost per query: ${cost_per_query:.6f}")
-    
-        
+
+            
 with st.expander("Get prompt as JSON"):
     st.write("JSON all on one line:")
     st.text(st.session_state['messages'])
     st.write("Properly-displayed JSON:")
     st.write(st.session_state['messages'])
     
-st.subheader("Preview Responses")
 
+st.subheader("Preview Responses")
 example1, example2 = st.columns([1, 2])
 with example1:
     number_of_responses = st.number_input("Number of example responses to preview:", 1, 10, 3, 1)
@@ -126,7 +128,6 @@ else:
             # apend response to responses
             st.session_state['responses'].append(response)    
     
-
 for i in st.session_state['responses']:
     st.subheader(f"Response #{st.session_state['responses'].index(i) + 1} ")
     st.write(i)
