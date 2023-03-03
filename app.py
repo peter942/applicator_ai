@@ -25,7 +25,7 @@ if 'responses' not in st.session_state:
 
 st.sidebar.title("ChatGPT API Prompt Builder")
 if st.session_state['open_ai_api_key'] == "":
-    st.sidebar.warning("You need to enter your OpenAI API key to test queries")
+    st.warning("<- You need to enter your OpenAI API key on the left to test queries")
 with st.sidebar.expander("OpenAI API Key"):
     st.session_state['open_ai_api_key'] = st.text_input("Enter your key here:", "")
     st.markdown("You can get your API key from [here](https://platform.openai.com/account/api-keys)")
@@ -102,14 +102,14 @@ with footer2:
         total_tokens = total_tokens + len(i["content"]) / 4
     cost_per_query = total_tokens * 0.000002
     st.info(f"Total tokens: {total_tokens}/4096   \nCost per query: ${cost_per_query:.6f}")
-
             
 with st.expander("Get prompt as JSON"):
     st.write("JSON all on one line:")
     st.text(st.session_state['messages'])
     st.write("Properly-displayed JSON:")
     st.write(st.session_state['messages'])
-    
+
+
 
 st.subheader("Preview Responses")
 example1, example2 = st.columns([1, 2])
