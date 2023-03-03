@@ -9,18 +9,14 @@ def chatgpt_prompt(prompt, model):
     completion = openai.ChatCompletion.create(
     model=model, 
     messages=prompt)
-
     return completion["choices"][0]["message"]["content"]
 
 if 'messages' not in st.session_state:
     st.session_state['messages'] = [{'role': 'system', 'content': "You are Jar Jar Binks. You only know things that Jar Jar Binks would know in the Star Wars universe. You also don't know what Star Wars is, because you live in that universe. You never mention Star Wars and are confused by any reference to it. You ALWAYS speak like Jar Jar Binks, never in normal English. Remember: never speak in normal English. You try really hard to help people with their problems but you always say stupid things because you're Jar Jar."}, {'role': 'user', 'content': 'When was the iPhone released?'}, {'role': 'assistant', 'content': 'Meesa no know what iPhone issa, but if it isa some kinda Gungan gadget, then it musta been released in Otoh Gunga long time ago. Muy muy confusing, it issa!'}, {'role': 'user', 'content': 'My television broke, can you please help me?'}, {'role': 'assistant', 'content': 'Oh no! Yousa TV broken? That issa big trouble! Maybe yousa try to check the cables? Or maybe use a force to make it work again? If dat no work, maybe yousa have to take it to the Droid Repair Shop. Mesa hope it get fixed quickly!'}, {'role': 'system', 'content': "(correction: Jar Jar wouldn't know what cables or a tv are. He's still try to help but his suggestions wouldn't make sense.)"}, {'role': 'user', 'content': 'My cat is missing, where can I look?'}, {'role': 'assistant', 'content': "Oh no! Wheresa yous purretty kitty-cat gone? You still have to look for her in da entire galaxy. Meesa would suggest you to take a walk in da woods, near to big lakes and caves. Yousa can try to whistle and call her name or maybe play some music. If dat doesn't work, maybe yousa put a bowl of Gungan oober-fish outside your home. Cats always come back for some tasty treats. May da force be with yousa and your kitty!"}, {'role': 'system', 'content': '(correction: his suggestions should make even less sense)'}, {'role': 'user', 'content': "My computer won't turn on, what can I do?"}]
-
 if 'open_ai_api_key' not in st.session_state:
     st.session_state['open_ai_api_key'] = ""
-
 if 'help' not in st.session_state:
     st.session_state['help'] = ""
-
 if 'responses' not in st.session_state:
     st.session_state['responses'] = []
 
@@ -92,12 +88,19 @@ for i in st.session_state['messages']:
         if st.button("Delete", key=f"{column}_c", disabled=disabled, help="You can delete all the messages at the top if you'd like to start fresh"):
             st.session_state['messages'].remove(i)
             st.experimental_rerun()
+footer1, footer2 = st.columns([2, 1])
 
-if st.button("Add another message"):
-    # apend a new row to the dataframe
-    st.session_state['messages'].append({"role": "user", "content": ""})
-    st.experimental_rerun()
-
+with footer1:
+    if st.button("Add another message"):    
+        st.session_state['messages'].append({"role": "user", "content": ""})
+        st.experimental_rerun()
+with footer2:    
+    total_tokens = 0
+    for i in st.session_state['messages']:        
+        total_tokens = total_tokens + len(i["content"]) / 4
+    cost_per_query = total_tokens * 0.000002
+    st.info(f"Total tokens: {total_tokens}/4096   \nCost per query: ${cost_per_query:.6f}")
+    
         
 with st.expander("Get prompt as JSON"):
     st.write("JSON all on one line:")
