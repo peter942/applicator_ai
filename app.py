@@ -1,16 +1,49 @@
 import openai
 import streamlit as st
-import time
+import ast
+import pandas as pd
 
 
 st.set_page_config(page_title="ChatGPT Prompt Creator")
 
+if "new_session" not in st.session_state or st.session_state['new_prompt'] != "":
+    st.session_state['file_path'] = "prompts.csv"
+    st.session_state['df'] = pd.read_csv(st.session_state['file_path'],na_filter=False)
+    st.session_state['records'] = st.session_state['df'].to_dict('records')
+    st.session_state['prompt_names'] = [record['name'] for record in st.session_state['records']]
+    st.session_state['prompt_names'].insert(0, "New prompt")
+    st.session_state['new_session'] = False
 
 def chatgpt_prompt(prompt, model):
     completion = openai.ChatCompletion.create(
     model=model, 
     messages=prompt)
     return completion["choices"][0]["message"]["content"]
+
+#Write a Python function that takes a Google Sheets URL, row number, and text to update, and then, in the row at the row number, changes the text in the column at index 1 with the text_to_update:
+
+if "new_prompt" not in st.session_state:
+    st.session_state['new_prompt'] = ""
+
+if "which_prompt" not in st.session_state:
+    st.session_state['which_prompt'] = "New prompt"
+    st.session_state['messages'] = [{'role': 'system', 'content': "You are Jar Jar Binks. You only know things that Jar Jar Binks would know in the Star Wars universe. You also don't know what Star Wars is, because you live in that universe. You never mention Star Wars and are confused by any reference to it. You ALWAYS speak like Jar Jar Binks, never in normal English. Remember: never speak in normal English. You try really hard to help people with their problems but you always say stupid things because you're Jar Jar."}]
+
+
+if "index_of_current_selection" not in st.session_state:
+    st.session_state['index_of_current_selection'] = ""
+
+if st.session_state['new_prompt'] != "":
+    st.session_state['index_of_current_selection'] = st.session_state['prompt_names'].index(st.session_state['new_prompt'])
+    which_prompt = st.session_state['new_prompt']
+    st.session_state['new_prompt'] = ""
+else:
+    if st.session_state['which_prompt'] != "":
+        st.session_state['index_of_current_selection'] = st.session_state['prompt_names'].index(st.session_state['which_prompt'])
+    else:
+        st.session_state['index_of_current_selection'] = 0
+    
+
 
 
 if 'messages' not in st.session_state:
@@ -23,43 +56,49 @@ if 'responses' not in st.session_state:
     st.session_state['responses'] = []
 
 
-st.sidebar.title("ChatGPT API Prompt Builder")
-if st.session_state['open_ai_api_key'] == "":
-    st.warning("<- You need to enter your OpenAI API key on the left to test queries")
-with st.sidebar.expander("OpenAI API Key"):
-    st.session_state['open_ai_api_key'] = st.text_input("Enter your key here:", "")
-    st.markdown("You can get your API key from [here](https://platform.openai.com/account/api-keys)")
-    st.markdown("No data is saved - you can see the code [here](https://github.com/peter942/chatgpt-prompt_builder). This is hosted on [Streamlit's Community Cloud](https://streamlit.io/cloud).")        
-    if st.button("Save"):
-        openai.api_key = st.session_state['open_ai_api_key']
-        st.success("Saved")
-        time.sleep(1)
+st.sidebar.title("Applicator.ai")
+
+
+
+
+
+
+
+
+which_prompt = st.sidebar.selectbox("Which prompt do you want to use?", st.session_state['prompt_names'], index=st.session_state['index_of_current_selection'], key="is_which_prompt")
+    
+
+if which_prompt != st.session_state['which_prompt']:
+    if which_prompt == "New prompt":
+        st.session_state['which_prompt'] = which_prompt
+        st.session_state['messages'] = [{'role': 'system', 'content': "You are Jar Jar Binks. You only know things that Jar Jar Binks would know in the Star Wars universe. You also don't know what Star Wars is, because you live in that universe. You never mention Star Wars and are confused by any reference to it. You ALWAYS speak like Jar Jar Binks, never in normal English. Remember: never speak in normal English. You try really hard to help people with their problems but you always say stupid things because you're Jar Jar."}]
+        st.session_state['responses'] = []
+        st.experimental_rerun()
+    else:
+        st.session_state['which_prompt'] = which_prompt
+        st.session_state['messages'] = ast.literal_eval(st.session_state['records'][st.session_state['prompt_names'].index(st.session_state['which_prompt']) - 1]['prompt'])
+        st.session_state['responses'] = []
         st.experimental_rerun()
 
 
-st.sidebar.subheader("ChatGPT Prompt Helper")
-st.sidebar.write("You can ask ChatGPT for help in building a prompt here!")
-prompt = st.sidebar.text_area("Prompt", "Write a prompt for acting as Jar Jar Binks:")
-if st.session_state['open_ai_api_key'] == "":
-    st.sidebar.button("Ask ChatGPT", key="ask_chatgpt", disabled=True, help="You need to enter your OpenAI API key in the top left corner first!")
-else:
-    if st.sidebar.button("Ask ChatGPT"):
-        st.session_state['help'] = chatgpt_prompt([{'role': 'system', 'content': 'You are a prompt-writing assistant, you help write prompts optimised for ChatGPT in order to help users customise it to perfection. You give them detailed prompts based on the instructions they provide.'}, {'role': 'assistant', 'content': 'Write a prompt for chatGPT to act as a javascript assistant'}, {'role': 'assistant', 'content': 'write a prompt to act as a motivational coach\n'}, {'role': 'assistant', 'content': 'I want you to act as a motivational coach. I will provide you with some information about someone\'s goals and challenges, and it will be your job to come up with strategies that can help this person achieve their goals. This could involve providing positive affirmations, giving helpful advice or suggesting activities they can do to reach their end goal. My first request is "I need help motivating myself to stay disciplined while studying for an upcoming exam".'}, {'role': 'user', 'content': 'write a prompt to act as a life coach'}, {'role': 'assistant', 'content': 'I want you to act as a life coach. I will provide some details about my current situation and goals, and it will be your job to come up with strategies that can help me make better decisions and reach those objectives. This could involve offering advice on various topics, such as creating plans for achieving success or dealing with difficult emotions. My first request is "I need help developing healthier habits for managing stress."'}, {'role': 'user', 'content': '{}'.format(prompt)}], model="gpt-3.5-turbo")
-        st.experimental_rerun()
-if st.session_state['help'] != "":
-    st.sidebar.info(st.session_state['help'])
-    if st.sidebar.button("Make this system message #1"):
-        st.session_state['messages'][0]["content"] = st.session_state['help']
-        st.experimental_rerun()
+
+    
+    
+
 
 
 header1, header2 = st.columns([3, 2])
 with header1:
     st.subheader("Build Prompt")
 with header2:
-    if st.button("Delete existing conversation"):
+    if st.button("Clear existing conversation"):
         st.session_state['messages'] = [{'role': 'system', 'content': "You are Jar Jar Binks. You only know things that Jar Jar Binks would know in the Star Wars universe. You also don't know what Star Wars is, because you live in that universe. You never mention Star Wars and are confused by any reference to it. You ALWAYS speak like Jar Jar Binks, never in normal English. Remember: never speak in normal English. You try really hard to help people with their problems but you always say stupid things because you're Jar Jar."}]
         st.experimental_rerun()
+    # with st.expander("Upload existing conversation"):
+      #  new_json = st.text_area("Paste your JSON here:", "")
+       # if st.button("Update"):
+        #    st.session_state['messages'] = json.loads(new_json)
+         #   st.experimental_rerun()
 
 
 column = 1
@@ -100,14 +139,66 @@ with footer2:
     total_tokens = 0
     for i in st.session_state['messages']:        
         total_tokens = total_tokens + len(i["content"]) / 4
-    cost_per_query = total_tokens * 0.000002
-    st.info(f"Total tokens: {total_tokens}/4096   \nCost per query: ${cost_per_query:.6f}")
-            
-with st.expander("Get prompt as JSON"):
-    st.write("JSON all on one line:")
-    st.text(st.session_state['messages'])
-    st.write("Properly-displayed JSON:")
-    st.write(st.session_state['messages'])
+    cost_per_query = (total_tokens * 0.000002) * 100
+    st.info(f"Total tokens: {total_tokens}/4096   \nCost/100 queries: ${cost_per_query:.6f}")
+
+if st.session_state['messages'] != ast.literal_eval(st.session_state['records'][st.session_state['prompt_names'].index(st.session_state['which_prompt']) - 1]['prompt']):
+    st.sidebar.warning("You have changed the prompt. To save it, click below")
+
+if st.session_state['which_prompt'] != "New prompt":
+    if st.sidebar.button(f"Save {st.session_state['which_prompt']} prompt", key="save_prompt", type="secondary"):        
+        st.session_state['records'][st.session_state['prompt_names'].index(st.session_state['which_prompt']) - 1]['prompt'] = str(st.session_state['messages'])
+        st.session_state['df'] = pd.DataFrame(st.session_state['records'])
+        st.session_state['df'].to_csv(st.session_state['file_path'], index=False)
+
+col1, col2 = st.sidebar.columns([1, 1])
+with col1:
+    prompt_name = st.text_input("Prompt name", key="the_prompt_name")
+with col2:
+    st.write("")
+    st.write("")    
+    if st.button("Save new prompt", key="save_new_prompt"):        
+        new_row = {'name': prompt_name, 'prompt': str(st.session_state['messages'])}
+        st.session_state['df'] = st.session_state['df'].append(new_row, ignore_index=True)
+        st.session_state['df'].to_csv(st.session_state['file_path'], index=False)
+        st.session_state['new_prompt'] = prompt_name
+        prompt_name = ""
+        st.experimental_rerun()
+
+
+
+
+
+st.sidebar.markdown("***")
+
+
+st.sidebar.subheader("ChatGPT Prompt Helper")
+st.sidebar.write("You can ask ChatGPT for help in building a prompt here!")
+prompt = st.sidebar.text_area("Prompt", "Write a prompt for acting as Jar Jar Binks:")
+if st.session_state['open_ai_api_key'] == "":
+    st.sidebar.button("Ask ChatGPT", key="ask_chatgpt", disabled=True, help="You need to enter your OpenAI API key in the top left corner first!")
+else:
+    if st.sidebar.button("Ask ChatGPT"):
+        st.session_state['help'] = chatgpt_prompt([{'role': 'system', 'content': 'You are a prompt-writing assistant, you help write prompts optimised for ChatGPT in order to help users customise it to perfection. You give them detailed prompts based on the instructions they provide.'}, {'role': 'assistant', 'content': 'Write a prompt for chatGPT to act as a javascript assistant'}, {'role': 'assistant', 'content': 'write a prompt to act as a motivational coach\n'}, {'role': 'assistant', 'content': 'I want you to act as a motivational coach. I will provide you with some information about someone\'s goals and challenges, and it will be your job to come up with strategies that can help this person achieve their goals. This could involve providing positive affirmations, giving helpful advice or suggesting activities they can do to reach their end goal. My first request is "I need help motivating myself to stay disciplined while studying for an upcoming exam".'}, {'role': 'user', 'content': 'write a prompt to act as a life coach'}, {'role': 'assistant', 'content': 'I want you to act as a life coach. I will provide some details about my current situation and goals, and it will be your job to come up with strategies that can help me make better decisions and reach those objectives. This could involve offering advice on various topics, such as creating plans for achieving success or dealing with difficult emotions. My first request is "I need help developing healthier habits for managing stress."'}, {'role': 'user', 'content': '{}'.format(prompt)}], model="gpt-3.5-turbo")
+        st.experimental_rerun()
+if st.session_state['help'] != "":
+    st.sidebar.info(st.session_state['help'])
+    if st.sidebar.button("Make this system message #1"):
+        st.session_state['messages'][0]["content"] = st.session_state['help']
+        
+        st.experimental_rerun()
+
+
+
+
+
+
+
+# with st.expander("Get prompt as JSON"):
+  #  st.write("JSON all on one line:")
+   # st.text(st.session_state['messages'])
+    #st.write("Properly-displayed JSON:")
+    # st.write(st.session_state['messages'])
 
 
 
@@ -118,15 +209,13 @@ with example1:
 with example2:
     st.write(" ")
     st.write(" ")
-if st.session_state['open_ai_api_key'] == "":
-    st.button("Preview next message", key="preview", disabled=True, help="You need to enter your OpenAI API key in the top left corner first!")
-else:
-    if st.button("Preview next message"):
-        st.session_state['responses'] = []        
-        for i in range(0, number_of_responses):
-            response = chatgpt_prompt(st.session_state['messages'], "gpt-3.5-turbo")
-            # apend response to responses
-            st.session_state['responses'].append(response)    
+
+if st.button("Preview next message"):
+    st.session_state['responses'] = []        
+    for i in range(0, number_of_responses):
+        response = chatgpt_prompt(st.session_state['messages'], "gpt-3.5-turbo")
+        # apend response to responses
+        st.session_state['responses'].append(response)    
     
 for i in st.session_state['responses']:
     st.subheader(f"Response #{st.session_state['responses'].index(i) + 1} ")
@@ -135,4 +224,5 @@ for i in st.session_state['responses']:
         # add response to messages as the last item
         st.session_state['messages'].append({"role": "assistant", "content": i})
         st.experimental_rerun()
-        
+
+
