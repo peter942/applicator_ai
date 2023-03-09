@@ -2,10 +2,13 @@ import openai
 import streamlit as st
 import ast
 import pandas as pd
+import os
 
 st.set_page_config(page_title="Applicator.ai")
 
-if st.session_state['online'] == True:
+
+
+if os.environ[st.session_state['online']] == True:
     st.error("This is a test app - the saving and running of queries is disabled. If you want to use the full functionality, you'll need to download the code and run it locally. You can see instructions on how to do this here: http://applicator.ai/")
 
 
