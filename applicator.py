@@ -5,7 +5,7 @@ import pandas as pd
 
 st.set_page_config(page_title="Applicator.ai")
 
-if openai.api_key == "":
+if st.session_state['online'] == True:
     st.error("This is a test app - the saving and running of queries is disabled. If you want to use the full functionality, you'll need to download the code and run it locally. You can see instructions on how to do this here: http://applicator.ai/")
 
 
@@ -17,6 +17,8 @@ if "new_session" not in st.session_state or st.session_state['new_prompt'] != ""
     st.session_state['prompt_names'] = [record['name'] for record in st.session_state['records']]
     st.session_state['prompt_names'].insert(0, "New prompt")
     st.session_state['new_session'] = False
+    if st.session_state['online'] != True:
+        st.session_state['online'] != False
 
 
 
