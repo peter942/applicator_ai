@@ -18,6 +18,12 @@ if "new_session" not in st.session_state or st.session_state['new_prompt'] != ""
     
         st.session_state['online'] = False
 
+if not os.path.exists(".streamlit"):
+    os.makedirs(".streamlit")
+    with open(".streamlit/secrets.toml", "w") as f:        
+        f.write("online = false")
+        
+
 if st.secrets["online"] == True:
     st.error("This is a test app - the saving and running of queries is disabled. If you want to use the full functionality, you'll need to download the code and run it locally. You can see instructions on how to do this here: http://applicator.ai/")
 
