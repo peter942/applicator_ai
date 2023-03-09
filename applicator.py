@@ -173,7 +173,7 @@ if page == "Build Queries":
     st.sidebar.write("You can ask ChatGPT for help in building a prompt here!")
 
     prompt = st.sidebar.text_area("Prompt", "Write a prompt for acting as Jar Jar Binks:")
-    if openai.api_key == "":
+    if st.secrets["online"] == True:
         st.sidebar.button("Ask ChatGPT Prompt Helper", disabled=True)
     else:
         if st.sidebar.button("Ask ChatGPT Prompt Helper"):
